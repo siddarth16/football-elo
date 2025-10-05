@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { exec } from 'child_process'
-import { promisify } from 'util'
+import fs from 'fs'
 import path from 'path'
-
-const execAsync = promisify(exec)
+import { updateMatchScore } from '@/lib/eloCalculator'
 
 // This will be called when user updates a score
 export async function POST(request: NextRequest) {
@@ -19,34 +17,28 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Call Python script to update match and recalculate ELO
-    const scriptPath = path.join(process.cwd(), 'scripts', 'update_single_match.py')
-    const command = `python "${scriptPath}" ${matchId} ${homeScore} ${awayScore}`
+    // Load current data
+    const dataPath = path.join(process.cwd(), 'data', 'season_2025_26.json')
+    const paramsPath = path.join(process.cwd(), 'data', 'parameters.json')
 
-    const { stdout, stderr } = await execAsync(command)
+    const data = JSON.parse(fs.readFileSync(dataPath, 'utf-8'))
+    const params = JSON.parse(fs.readFileSync(paramsPath, 'utf-8'))
 
-    if (stderr) {
-      console.error('Python script error:', stderr)
-    }
+    // Update match and recalculate ELO using TypeScript
+    const result = updateMatchScore(data, params, matchId, homeScore, awayScore)
 
-    const result = JSON.parse(stdout)
-
-    if (result.error) {
-      return NextResponse.json(
-        { error: result.error },
-        { status: 404 }
-      )
-    }
+    // Save updated data
+    fs.writeFileSync(dataPath, JSON.stringify(data, null, 2))
 
     return NextResponse.json({
-      success: true,
-      message: 'Score saved and ELO recalculated successfully!',
-      ...result
+      ...result,
+      message: 'Score saved and ELO recalculated successfully!'
     })
   } catch (error) {
     console.error('Error updating score:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Failed to update score'
     return NextResponse.json(
-      { error: 'Failed to update score' },
+      { error: errorMessage },
       { status: 500 }
     )
   }
