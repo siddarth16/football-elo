@@ -22,8 +22,29 @@ export async function GET() {
       supabase.from('parameters').select('*')
     ])
 
-    if (teamsError || matches2024Error || matches2025CompletedError || matches2025PendingError || predictionsError || parametersError) {
-      throw new Error('Database query failed')
+    if (teamsError) {
+      console.error('Teams error:', teamsError)
+      throw new Error(`Teams query failed: ${teamsError.message}`)
+    }
+    if (matches2024Error) {
+      console.error('Matches 2024 error:', matches2024Error)
+      throw new Error(`Matches 2024 query failed: ${matches2024Error.message}`)
+    }
+    if (matches2025CompletedError) {
+      console.error('Matches 2025 completed error:', matches2025CompletedError)
+      throw new Error(`Matches 2025 completed query failed: ${matches2025CompletedError.message}`)
+    }
+    if (matches2025PendingError) {
+      console.error('Matches 2025 pending error:', matches2025PendingError)
+      throw new Error(`Matches 2025 pending query failed: ${matches2025PendingError.message}`)
+    }
+    if (predictionsError) {
+      console.error('Predictions error:', predictionsError)
+      throw new Error(`Predictions query failed: ${predictionsError.message}`)
+    }
+    if (parametersError) {
+      console.error('Parameters error:', parametersError)
+      throw new Error(`Parameters query failed: ${parametersError.message}`)
     }
 
     // Build current_elos object from teams
@@ -38,18 +59,28 @@ export async function GET() {
       paramsObject[param.param_key] = param.param_value
     })
 
+    // Get promoted teams from teams table
+    const promotedTeams = teams?.filter(t => t.is_promoted).map(t => t.name) || []
+
+    // Add promoted_teams to parameters if not already there
+    if (!paramsObject['promoted_teams']) {
+      paramsObject['promoted_teams'] = promotedTeams
+    }
+
     // Format data to match existing structure
     const season2024 = {
       matches: matches_2024 || [],
       final_elos: current_elos,
-      baseline_stats: paramsObject['baseline_stats'] || {}
+      baseline_stats: paramsObject['baseline_stats'] || {},
+      promoted_teams: promotedTeams
     }
 
     const season2025 = {
       completed_matches: matches_2025_completed || [],
       pending_matches: matches_2025_pending || [],
       current_elos,
-      predictions: predictions || []
+      predictions: predictions || [],
+      promoted_teams: promotedTeams
     }
 
     return NextResponse.json({
