@@ -85,9 +85,8 @@ python prepare_current_season.py
 python create_predictions.py
 ```
 
-4. Install webapp dependencies:
+4. Install dependencies:
 ```bash
-cd football-elo-webapp
 npm install
 ```
 
@@ -146,30 +145,37 @@ npm run dev
 ## 📂 Project Structure
 
 ```
-football-elo/
-├── football-elo-webapp/          # Next.js webapp
-│   ├── app/                      # App router pages
-│   │   ├── page.tsx             # Dashboard
-│   │   ├── predictions/         # Predictions page
-│   │   ├── score-entry/         # Score entry interface
-│   │   ├── rankings/            # ELO rankings
-│   │   ├── history/             # ELO history charts
-│   │   ├── accuracy/            # Prediction accuracy
-│   │   └── api/                 # API routes
-│   ├── components/              # React components
-│   │   ├── ui/                  # UI primitives
-│   │   └── Navigation.tsx       # Main navigation
-│   ├── lib/                     # Utility functions
-│   ├── types/                   # TypeScript definitions
-│   └── data/                    # JSON data files
-├── scripts/                      # Data processing scripts
-│   ├── process_data.py          # Main ELO calculation
+football-elo/                    # Repository root (Next.js app)
+├── app/                         # App router pages
+│   ├── page.tsx                # Dashboard
+│   ├── predictions/            # Predictions page
+│   ├── score-entry/            # Score entry interface
+│   ├── rankings/               # ELO rankings
+│   ├── history/                # ELO history charts
+│   ├── accuracy/               # Prediction accuracy
+│   └── api/                    # API routes
+├── components/                  # React components
+│   ├── ui/                     # UI primitives
+│   └── Navigation.tsx          # Main navigation
+├── lib/                        # Utility functions
+├── types/                      # TypeScript definitions
+├── data/                       # JSON data files (40MB)
+│   ├── season_2024_25.json    # Training data
+│   ├── season_2025_26.json    # Current season + predictions
+│   └── parameters.json         # ELO parameters
+├── scripts/                    # Data processing scripts
+│   ├── process_data.py        # Main ELO calculation
 │   ├── prepare_current_season.py
 │   ├── create_predictions.py
 │   └── generate_pages.py
-├── Football-Top5-Past-And-Current-Data.xlsx  # Raw data
-├── CHANGES_MADE.md              # Change log
-└── ELO_SYSTEM_GUIDE.md          # System documentation
+├── archive/                    # Original files
+│   ├── Football-Top5-Past-And-Current-Data.xlsx
+│   ├── CHANGES_MADE.md
+│   └── ELO_SYSTEM_GUIDE.md
+├── package.json                # Dependencies
+├── next.config.ts              # Next.js config
+├── tsconfig.json               # TypeScript config
+└── README.md                   # This file
 ```
 
 ## 🔧 How It Works
