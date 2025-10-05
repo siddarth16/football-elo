@@ -6,12 +6,21 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Force readable text colors */
-* {
+/* Light backgrounds - dark text */
+.bg-white, .bg-gray-50, .bg-gray-100, .bg-yellow-200, .bg-green-200, .bg-blue-200, .bg-red-200, .bg-purple-200 {
   color: #000000;
 }
 
-/* Ensure all text is black on light backgrounds */
+/* Dark backgrounds - light text */
+.bg-gray-800, .bg-gray-900, .bg-black {
+  color: #ffffff !important;
+}
+
+.bg-gray-800 *, .bg-gray-900 *, .bg-black * {
+  color: #ffffff !important;
+}
+
+/* Text color utilities for light backgrounds */
 .text-gray-600 {
   color: #4a4a4a !important;
 }

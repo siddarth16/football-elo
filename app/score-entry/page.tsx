@@ -44,7 +44,7 @@ export default function ScoreEntryPage() {
 
     setSaving(true)
     try {
-      await fetch('/api/update-score', {
+      const response = await fetch('/api/update-score', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -53,9 +53,27 @@ export default function ScoreEntryPage() {
           awayScore: parseInt(score.away)
         })
       })
-      alert('Score saved! Please refresh to recalculate ELO.')
+
+      const result = await response.json()
+
+      if (result.success) {
+        // Clear the score input for this match
+        setScores(prev => {
+          const newScores = { ...prev }
+          delete newScores[match.eventId]
+          return newScores
+        })
+
+        // Reload data to reflect the updated match list and ELO ratings
+        const freshData = await fetch('/api/data').then(res => res.json())
+        setData(freshData.season2025)
+
+        alert(`Score saved! ELO updated:\n${match.homeTeamName}: ${result.home_elo_change > 0 ? '+' : ''}${result.home_elo_change}\n${match.awayTeamName}: ${result.away_elo_change > 0 ? '+' : ''}${result.away_elo_change}`)
+      } else {
+        alert('Error: ' + result.error)
+      }
     } catch (err) {
-      alert('Error saving score')
+      alert('Error saving score: ' + err)
     }
     setSaving(false)
   }
@@ -89,28 +107,28 @@ export default function ScoreEntryPage() {
                   </div>
                   <div className="font-bold">{match.homeTeamName} vs {match.awayTeamName}</div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <Input
                     type="number"
                     placeholder="0"
-                    className="w-16 text-center"
+                    className="w-20 h-12 text-center text-xl font-black"
                     value={scores[match.eventId]?.home || ''}
                     onChange={(e) => handleScoreChange(match.eventId, 'home', e.target.value)}
                   />
-                  <span className="font-black">-</span>
+                  <span className="font-black text-xl">-</span>
                   <Input
                     type="number"
                     placeholder="0"
-                    className="w-16 text-center"
+                    className="w-20 h-12 text-center text-xl font-black"
                     value={scores[match.eventId]?.away || ''}
                     onChange={(e) => handleScoreChange(match.eventId, 'away', e.target.value)}
                   />
                   <Button
-                    size="sm"
                     onClick={() => handleSave(match)}
                     disabled={saving}
+                    className="h-12"
                   >
-                    <Save className="h-4 w-4" />
+                    <Save className="h-5 w-5" />
                   </Button>
                 </div>
               </div>
