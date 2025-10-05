@@ -1,6 +1,23 @@
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
 
+// Convert snake_case to camelCase
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function toCamelCase(obj: any): any {
+  if (Array.isArray(obj)) {
+    return obj.map(toCamelCase)
+  } else if (obj !== null && typeof obj === 'object') {
+    return Object.keys(obj).reduce((acc, key) => {
+      const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      acc[camelKey] = toCamelCase(obj[key])
+      return acc
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    }, {} as any)
+  }
+  return obj
+}
+
 export async function GET() {
   try {
     const supabase = createServerClient()
@@ -67,19 +84,25 @@ export async function GET() {
       paramsObject['promoted_teams'] = promotedTeams
     }
 
+    // Convert all data from snake_case to camelCase
+    const matches2024Camel = toCamelCase(matches_2024 || [])
+    const matches2025CompletedCamel = toCamelCase(matches_2025_completed || [])
+    const matches2025PendingCamel = toCamelCase(matches_2025_pending || [])
+    const predictionsCamel = toCamelCase(predictions || [])
+
     // Format data to match existing structure
     const season2024 = {
-      matches: matches_2024 || [],
+      matches: matches2024Camel,
       final_elos: current_elos,
       baseline_stats: paramsObject['baseline_stats'] || {},
       promoted_teams: promotedTeams
     }
 
     const season2025 = {
-      completed_matches: matches_2025_completed || [],
-      pending_matches: matches_2025_pending || [],
+      completed_matches: matches2025CompletedCamel,
+      pending_matches: matches2025PendingCamel,
       current_elos,
-      predictions: predictions || [],
+      predictions: predictionsCamel,
       promoted_teams: promotedTeams
     }
 
