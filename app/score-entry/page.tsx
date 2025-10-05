@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -14,8 +16,34 @@ export default function ScoreEntryPage() {
   const [data, setData] = useState<Season2025Data | null>(null)
   const [scores, setScores] = useState<Record<number, { home: string, away: string }>>({})
   const [saving, setSaving] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
+    // Check authentication
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        router.push('/admin/login')
+      } else {
+        setIsAuthenticated(true)
+      }
+    })
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!session) {
+        router.push('/admin/login')
+      } else {
+        setIsAuthenticated(true)
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [router])
+
+  useEffect(() => {
+    if (!isAuthenticated) return
+
     fetch('/api/data')
       .then(res => res.json())
       .then(d => {
@@ -23,7 +51,7 @@ export default function ScoreEntryPage() {
         setLoading(false)
       })
       .catch(() => setLoading(false))
-  }, [])
+  }, [isAuthenticated])
 
   const handleScoreChange = (eventId: number, type: 'home' | 'away', value: string) => {
     setScores(prev => ({
@@ -78,17 +106,31 @@ export default function ScoreEntryPage() {
     setSaving(false)
   }
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push('/')
+  }
+
+  if (!isAuthenticated) {
+    return <div className="container mx-auto px-4 py-12"><div className="text-2xl font-black uppercase">Checking authentication...</div></div>
+  }
+
   if (loading || !data) {
     return <div className="container mx-auto px-4 py-12"><div className="text-2xl font-black uppercase">Loading...</div></div>
   }
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-5xl font-black uppercase mb-2">Score Entry</h1>
-        <p className="text-gray-600 font-bold">
-          Enter match scores to update ELO ratings and predictions
-        </p>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-5xl font-black uppercase mb-2">Score Entry</h1>
+          <p className="text-gray-600 font-bold">
+            Enter match scores to update ELO ratings and predictions
+          </p>
+        </div>
+        <Button onClick={handleLogout} variant="secondary">
+          LOGOUT
+        </Button>
       </div>
 
       <div className="space-y-4">

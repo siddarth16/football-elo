@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import fs from 'fs'
-import path from 'path'
-import { updateMatchScore } from '@/lib/eloCalculator'
+import { createServerClient } from '@/lib/supabase'
+import { calculateELOChange } from '@/lib/eloCalculator'
 
 // This will be called when user updates a score
 export async function POST(request: NextRequest) {
@@ -17,22 +16,161 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Load current data
-    const dataPath = path.join(process.cwd(), 'data', 'season_2025_26.json')
-    const paramsPath = path.join(process.cwd(), 'data', 'parameters.json')
+    const supabase = createServerClient()
 
-    const data = JSON.parse(fs.readFileSync(dataPath, 'utf-8'))
-    const params = JSON.parse(fs.readFileSync(paramsPath, 'utf-8'))
+    // Fetch the pending match
+    const { data: match, error: matchError } = await supabase
+      .from('matches')
+      .select('*')
+      .eq('event_id', matchId)
+      .eq('is_completed', false)
+      .single()
 
-    // Update match and recalculate ELO using TypeScript
-    const result = updateMatchScore(data, params, matchId, homeScore, awayScore)
+    if (matchError || !match) {
+      return NextResponse.json(
+        { error: 'Match not found' },
+        { status: 404 }
+      )
+    }
 
-    // Save updated data
-    fs.writeFileSync(dataPath, JSON.stringify(data, null, 2))
+    // Fetch current ELOs
+    const { data: teams, error: teamsError } = await supabase
+      .from('teams')
+      .select('name, current_elo')
+      .in('name', [match.home_team_name, match.away_team_name])
+
+    if (teamsError || !teams) {
+      return NextResponse.json(
+        { error: 'Teams not found' },
+        { status: 404 }
+      )
+    }
+
+    const homeTeam = teams.find(t => t.name === match.home_team_name)
+    const awayTeam = teams.find(t => t.name === match.away_team_name)
+
+    if (!homeTeam || !awayTeam) {
+      return NextResponse.json(
+        { error: 'Team ELO data not found' },
+        { status: 404 }
+      )
+    }
+
+    const homeEloPre = homeTeam.current_elo
+    const awayEloPre = awayTeam.current_elo
+
+    // Fetch parameters
+    const { data: params, error: paramsError } = await supabase
+      .from('parameters')
+      .select('*')
+
+    if (paramsError || !params) {
+      return NextResponse.json(
+        { error: 'Parameters not found' },
+        { status: 404 }
+      )
+    }
+
+    // Build parameters object
+    const paramsObject: Record<string, unknown> = {}
+    params.forEach(param => {
+      paramsObject[param.param_key] = param.param_value
+    })
+
+    // Determine results
+    let homeResult: 'W' | 'D' | 'L'
+    let awayResult: 'W' | 'D' | 'L'
+
+    if (homeScore > awayScore) {
+      homeResult = 'W'
+      awayResult = 'L'
+    } else if (homeScore < awayScore) {
+      homeResult = 'L'
+      awayResult = 'W'
+    } else {
+      homeResult = 'D'
+      awayResult = 'D'
+    }
+
+    // Calculate ELO changes
+    const homeELOCalc = calculateELOChange(
+      homeEloPre,
+      awayEloPre,
+      homeResult,
+      homeScore,
+      awayScore,
+      true,
+      paramsObject as {
+        base_k_factor: number
+        k_caps: Record<string, number>
+        baseline_stats: { avg_home_advantage: number }
+      }
+    )
+
+    const awayELOCalc = calculateELOChange(
+      awayEloPre,
+      homeEloPre,
+      awayResult,
+      awayScore,
+      homeScore,
+      false,
+      paramsObject as {
+        base_k_factor: number
+        k_caps: Record<string, number>
+        baseline_stats: { avg_home_advantage: number }
+      }
+    )
+
+    const homeEloPost = Math.round((homeEloPre + homeELOCalc.elo_change) * 10) / 10
+    const awayEloPost = Math.round((awayEloPre + awayELOCalc.elo_change) * 10) / 10
+
+    // Update match in database
+    const { error: updateMatchError } = await supabase
+      .from('matches')
+      .update({
+        home_team_score: homeScore,
+        away_team_score: awayScore,
+        home_team_winner: homeScore > awayScore,
+        away_team_winner: awayScore > homeScore,
+        home_elo_pre: homeEloPre,
+        away_elo_pre: awayEloPre,
+        home_elo_change: homeELOCalc.elo_change,
+        away_elo_change: awayELOCalc.elo_change,
+        home_elo_post: homeEloPost,
+        away_elo_post: awayEloPost,
+        is_completed: true
+      })
+      .eq('id', match.id)
+
+    if (updateMatchError) {
+      throw updateMatchError
+    }
+
+    // Update team ELOs
+    await Promise.all([
+      supabase
+        .from('teams')
+        .update({ current_elo: homeEloPost })
+        .eq('name', match.home_team_name),
+      supabase
+        .from('teams')
+        .update({ current_elo: awayEloPost })
+        .eq('name', match.away_team_name)
+    ])
+
+    // Delete prediction for this match
+    await supabase
+      .from('predictions')
+      .delete()
+      .eq('event_id', matchId)
 
     return NextResponse.json({
-      ...result,
-      message: 'Score saved and ELO recalculated successfully!'
+      success: true,
+      message: 'Score saved and ELO recalculated successfully!',
+      home_elo_change: homeELOCalc.elo_change,
+      away_elo_change: awayELOCalc.elo_change,
+      home_elo_new: homeEloPost,
+      away_elo_new: awayEloPost
     })
   } catch (error) {
     console.error('Error updating score:', error)

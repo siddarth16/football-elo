@@ -1,30 +1,64 @@
 import { NextResponse } from 'next/server'
-import fs from 'fs'
-import path from 'path'
+import { createServerClient } from '@/lib/supabase'
 
 export async function GET() {
   try {
-    const dataDir = path.join(process.cwd(), 'data')
+    const supabase = createServerClient()
 
-    const season2024 = JSON.parse(
-      fs.readFileSync(path.join(dataDir, 'season_2024_25.json'), 'utf-8')
-    )
+    // Fetch all data in parallel
+    const [
+      { data: teams, error: teamsError },
+      { data: matches_2024, error: matches2024Error },
+      { data: matches_2025_completed, error: matches2025CompletedError },
+      { data: matches_2025_pending, error: matches2025PendingError },
+      { data: predictions, error: predictionsError },
+      { data: parameters, error: parametersError }
+    ] = await Promise.all([
+      supabase.from('teams').select('*'),
+      supabase.from('matches').select('*').eq('season_year', 2024).eq('is_completed', true).order('match_date', { ascending: true }),
+      supabase.from('matches').select('*').eq('season_year', 2025).eq('is_completed', true).order('match_date', { ascending: true }),
+      supabase.from('matches').select('*').eq('season_year', 2025).eq('is_completed', false).order('match_date', { ascending: true }),
+      supabase.from('predictions').select('*'),
+      supabase.from('parameters').select('*')
+    ])
 
-    const season2025 = JSON.parse(
-      fs.readFileSync(path.join(dataDir, 'season_2025_26.json'), 'utf-8')
-    )
+    if (teamsError || matches2024Error || matches2025CompletedError || matches2025PendingError || predictionsError || parametersError) {
+      throw new Error('Database query failed')
+    }
 
-    const parameters = JSON.parse(
-      fs.readFileSync(path.join(dataDir, 'parameters.json'), 'utf-8')
-    )
+    // Build current_elos object from teams
+    const current_elos: Record<string, number> = {}
+    teams?.forEach(team => {
+      current_elos[team.name] = team.current_elo
+    })
+
+    // Build parameters object
+    const paramsObject: Record<string, unknown> = {}
+    parameters?.forEach(param => {
+      paramsObject[param.param_key] = param.param_value
+    })
+
+    // Format data to match existing structure
+    const season2024 = {
+      matches: matches_2024 || [],
+      final_elos: current_elos,
+      baseline_stats: paramsObject['baseline_stats'] || {}
+    }
+
+    const season2025 = {
+      completed_matches: matches_2025_completed || [],
+      pending_matches: matches_2025_pending || [],
+      current_elos,
+      predictions: predictions || []
+    }
 
     return NextResponse.json({
       season2024,
       season2025,
-      parameters
+      parameters: paramsObject
     })
   } catch (error) {
-    console.error('Error loading data:', error)
+    console.error('Error loading data from Supabase:', error)
     return NextResponse.json(
       { error: 'Failed to load data' },
       { status: 500 }
