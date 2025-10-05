@@ -1,0 +1,7 @@
+{
+  "buildCommand": "cd football-elo-webapp && npm run build",
+  "outputDirectory": "football-elo-webapp/.next",
+  "devCommand": "cd football-elo-webapp && npm run dev",
+  "installCommand": "cd football-elo-webapp && npm install",
+  "framework": "nextjs"
+}

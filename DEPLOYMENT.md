@@ -7,11 +7,24 @@
 1. Go to [vercel.com](https://vercel.com) and sign in with GitHub
 2. Click "Add New Project"
 3. Import your GitHub repository: `siddarth16/football-elo`
-4. **Important**: Set the Root Directory to `football-elo-webapp`
-5. Keep all other settings as default
-6. Click "Deploy"
+4. **IMPORTANT - Configure Root Directory**:
+   - Click on "Edit" next to "Root Directory"
+   - Enter: `football-elo-webapp`
+   - This tells Vercel where your Next.js app is located
+5. Framework Preset should auto-detect as "Next.js"
+6. Keep all other settings as default (Build & Output Settings will auto-populate)
+7. Click "Deploy"
 
 Your app will be live at: `https://your-project-name.vercel.app`
+
+**Screenshot guide:**
+```
+Root Directory:  [football-elo-webapp]  ← Enter this!
+Framework Preset: Next.js               ← Should auto-detect
+Build Command: npm run build            ← Auto-populated
+Output Directory: .next                 ← Auto-populated
+Install Command: npm install            ← Auto-populated
+```
 
 ### Option 2: Vercel CLI
 
