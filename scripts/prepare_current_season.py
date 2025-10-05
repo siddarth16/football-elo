@@ -5,15 +5,15 @@ Prepare 2025-26 season data by removing future match scores
 import json
 from datetime import datetime
 
-# Current date (October 6, 2025)
-CUTOFF_DATE = datetime(2025, 10, 6)
+# Current date (October 4, 2025 - last day with scores)
+CUTOFF_DATE = datetime(2025, 10, 4, 23, 59, 59)
 
 print("="*80)
 print("PREPARING 2025-26 SEASON - REMOVING FUTURE SCORES")
 print("="*80)
 
 # Load the processed data
-with open(r'C:\Users\sidda\Desktop\Github Repositories\football-elo\football-elo-webapp\data\season_2025_26.json', 'r') as f:
+with open(r'C:\Users\sidda\Desktop\Github Repositories\football-elo\data\season_2025_26.json', 'r') as f:
     data = json.load(f)
 
 completed_matches = data['completed_matches']
@@ -74,7 +74,7 @@ data['completed_matches'] = past_matches
 data['pending_matches'] = future_matches
 
 # Save updated data
-output_file = r'C:\Users\sidda\Desktop\Github Repositories\football-elo\football-elo-webapp\data\season_2025_26.json'
+output_file = r'C:\Users\sidda\Desktop\Github Repositories\football-elo\data\season_2025_26.json'
 with open(output_file, 'w', encoding='utf-8') as f:
     json.dump(data, f, indent=2, default=str)
 

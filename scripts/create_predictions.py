@@ -81,15 +81,33 @@ def calculate_match_prediction(home_team: str, away_team: str,
     home_or_draw = home_win_prob + draw_prob
     away_or_draw = away_win_prob + draw_prob
 
-    # 5. Determine recommended bet (highest probability)
-    probs = {
+    # 5. Determine recommended bet
+    # Priority: Single outcomes first (Home/Draw/Away), then double chance
+    # Only recommend double chance if no single outcome is strong enough
+
+    single_outcomes = {
         'Home Win': home_win_prob,
         'Draw': draw_prob,
-        'Away Win': away_win_prob,
+        'Away Win': away_win_prob
+    }
+
+    double_chance = {
         'Home/Draw': home_or_draw,
         'Away/Draw': away_or_draw
     }
-    recommended = max(probs.items(), key=lambda x: x[1])
+
+    # Get best single outcome
+    best_single = max(single_outcomes.items(), key=lambda x: x[1])
+    best_double = max(double_chance.items(), key=lambda x: x[1])
+
+    # Prefer single outcome if it's >= 40%, otherwise use double chance if > 60%
+    if best_single[1] >= 0.40:
+        recommended = best_single
+    elif best_double[1] > 0.60:
+        recommended = best_double
+    else:
+        # If nothing is strong, pick the highest overall
+        recommended = best_single
 
     return {
         'home_win_prob': round(home_win_prob, 4),
@@ -110,10 +128,10 @@ def main():
     print("="*80)
 
     # Load data
-    with open(r'C:\Users\sidda\Desktop\Github Repositories\football-elo\football-elo-webapp\data\season_2025_26.json', 'r') as f:
+    with open(r'C:\Users\sidda\Desktop\Github Repositories\football-elo\data\season_2025_26.json', 'r') as f:
         data_2025 = json.load(f)
 
-    with open(r'C:\Users\sidda\Desktop\Github Repositories\football-elo\football-elo-webapp\data\parameters.json', 'r') as f:
+    with open(r'C:\Users\sidda\Desktop\Github Repositories\football-elo\data\parameters.json', 'r') as f:
         params = json.load(f)
 
     # Get defensive quality data
@@ -159,7 +177,7 @@ def main():
     # Save predictions
     data_2025['predictions'] = predictions
 
-    output_file = r'C:\Users\sidda\Desktop\Github Repositories\football-elo\football-elo-webapp\data\season_2025_26.json'
+    output_file = r'C:\Users\sidda\Desktop\Github Repositories\football-elo\data\season_2025_26.json'
     with open(output_file, 'w', encoding='utf-8') as f:
         json.dump(data_2025, f, indent=2, default=str)
 
