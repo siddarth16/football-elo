@@ -8,8 +8,8 @@ interface TableProps {
 
 export function Table({ children, className }: TableProps) {
   return (
-    <div className="overflow-x-auto border-4 border-black">
-      <table className={cn('w-full border-collapse', className)}>
+    <div className="overflow-x-auto border-2 md:border-4 border-black -mx-2 md:mx-0">
+      <table className={cn('w-full border-collapse min-w-[640px]', className)}>
         {children}
       </table>
     </div>
@@ -42,7 +42,7 @@ export function TableRow({ children, className, onClick }: TableRowProps) {
   return (
     <tr
       className={cn(
-        'border-b-4 border-black hover:bg-yellow-50 transition-colors',
+        'border-b-2 md:border-b-4 border-black hover:bg-yellow-50 transition-colors',
         onClick && 'cursor-pointer',
         className
       )}
@@ -62,7 +62,7 @@ export function TableHead({ children, className }: TableHeadProps) {
   return (
     <th
       className={cn(
-        'px-4 py-3 text-left font-black uppercase text-sm tracking-wider border-r-4 border-black last:border-r-0',
+        'px-2 md:px-4 py-2 md:py-3 text-left font-black uppercase text-xs md:text-sm tracking-wider border-r-2 md:border-r-4 border-black last:border-r-0',
         className
       )}
     >
@@ -80,7 +80,7 @@ export function TableCell({ children, className }: TableCellProps) {
   return (
     <td
       className={cn(
-        'px-4 py-3 text-sm font-medium border-r-4 border-black last:border-r-0 bg-white',
+        'px-2 md:px-4 py-2 md:py-3 text-xs md:text-sm font-medium border-r-2 md:border-r-4 border-black last:border-r-0 bg-white',
         className
       )}
     >

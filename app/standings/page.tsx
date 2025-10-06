@@ -150,51 +150,51 @@ export default function StandingsPage() {
   })
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-5xl font-black uppercase mb-2">League Standings</h1>
-        <p className="text-gray-600 font-bold">
+    <div className="container mx-auto px-2 md:px-4 py-4 md:py-8">
+      <div className="mb-4 md:mb-8">
+        <h1 className="text-3xl md:text-5xl font-black uppercase mb-2">League Standings</h1>
+        <p className="text-sm md:text-base text-gray-600 font-bold">
           Compare actual league position with ELO-based rankings
         </p>
       </div>
 
-      <div className="mb-6">
-        <label className="block font-bold mb-2 uppercase">Select League</label>
+      <div className="mb-4 md:mb-6">
+        <label className="block font-bold mb-2 uppercase text-sm md:text-base">Select League</label>
         <select
           value={selectedLeague}
           onChange={(e) => setSelectedLeague(e.target.value)}
-          className="px-4 py-3 border-4 border-black font-bold uppercase w-full md:w-auto"
+          className="px-3 md:px-4 py-3 border-2 md:border-4 border-black font-bold uppercase text-xs md:text-sm w-full md:w-auto"
         >
           {leagues.map(league => (
-            <option key={league} value={league}>{league}</option>
+            <option key={league} value={league}>{league === 'All Leagues' ? league : league.split(' ').slice(-2).join(' ')}</option>
           ))}
         </select>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>
-            {selectedLeague === 'All Leagues' ? 'All Teams' : selectedLeague} - 2025-26 Season
+          <CardTitle className="text-lg md:text-xl">
+            {selectedLeague === 'All Leagues' ? 'All Teams' : selectedLeague.split(' ').slice(-2).join(' ')} - 2025-26 Season
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0 md:p-4">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-16">Pos</TableHead>
+                  <TableHead className="w-10 md:w-16 whitespace-nowrap">Pos</TableHead>
                   <TableHead>Team</TableHead>
                   <TableHead className="text-center">P</TableHead>
                   <TableHead className="text-center">W</TableHead>
-                  <TableHead className="text-center">D</TableHead>
-                  <TableHead className="text-center">L</TableHead>
-                  <TableHead className="text-center">GF</TableHead>
-                  <TableHead className="text-center">GA</TableHead>
+                  <TableHead className="text-center hidden sm:table-cell">D</TableHead>
+                  <TableHead className="text-center hidden sm:table-cell">L</TableHead>
+                  <TableHead className="text-center hidden md:table-cell">GF</TableHead>
+                  <TableHead className="text-center hidden md:table-cell">GA</TableHead>
                   <TableHead className="text-center">GD</TableHead>
-                  <TableHead className="text-center">Pts</TableHead>
-                  <TableHead className="text-center">ELO</TableHead>
-                  <TableHead className="text-center">ELO Rank</TableHead>
-                  <TableHead className="text-center">Diff</TableHead>
+                  <TableHead className="text-center whitespace-nowrap">Pts</TableHead>
+                  <TableHead className="text-center hidden lg:table-cell">ELO</TableHead>
+                  <TableHead className="text-center hidden lg:table-cell whitespace-nowrap">ELO Rank</TableHead>
+                  <TableHead className="text-center hidden xl:table-cell">Diff</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -202,36 +202,36 @@ export default function StandingsPage() {
                   const rankDiff = team.position - team.eloRank
                   return (
                     <TableRow key={team.team}>
-                      <TableCell className="font-black text-lg">{team.position}</TableCell>
-                      <TableCell className="font-bold">{team.team}</TableCell>
+                      <TableCell className="font-black text-sm md:text-lg">{team.position}</TableCell>
+                      <TableCell className="font-bold text-xs md:text-sm min-w-[100px]">{team.team}</TableCell>
                       <TableCell className="text-center font-bold">{team.played}</TableCell>
                       <TableCell className="text-center font-bold">{team.won}</TableCell>
-                      <TableCell className="text-center font-bold">{team.drawn}</TableCell>
-                      <TableCell className="text-center font-bold">{team.lost}</TableCell>
-                      <TableCell className="text-center font-bold">{team.goalsFor}</TableCell>
-                      <TableCell className="text-center font-bold">{team.goalsAgainst}</TableCell>
-                      <TableCell className="text-center font-bold">
+                      <TableCell className="text-center font-bold hidden sm:table-cell">{team.drawn}</TableCell>
+                      <TableCell className="text-center font-bold hidden sm:table-cell">{team.lost}</TableCell>
+                      <TableCell className="text-center font-bold hidden md:table-cell">{team.goalsFor}</TableCell>
+                      <TableCell className="text-center font-bold hidden md:table-cell">{team.goalsAgainst}</TableCell>
+                      <TableCell className="text-center font-bold whitespace-nowrap">
                         <span className={team.goalDifference > 0 ? 'text-green-600' : team.goalDifference < 0 ? 'text-red-600' : ''}>
                           {team.goalDifference > 0 ? '+' : ''}{team.goalDifference}
                         </span>
                       </TableCell>
-                      <TableCell className="text-center font-black text-lg">{team.points}</TableCell>
-                      <TableCell className="text-center font-bold">{Math.round(team.elo)}</TableCell>
-                      <TableCell className="text-center font-bold">{team.eloRank}</TableCell>
-                      <TableCell className="text-center">
+                      <TableCell className="text-center font-black text-sm md:text-lg">{team.points}</TableCell>
+                      <TableCell className="text-center font-bold hidden lg:table-cell">{Math.round(team.elo)}</TableCell>
+                      <TableCell className="text-center font-bold hidden lg:table-cell">{team.eloRank}</TableCell>
+                      <TableCell className="text-center hidden xl:table-cell">
                         <div className="flex items-center justify-center">
                           {rankDiff > 0 ? (
                             <div className="flex items-center text-red-600">
-                              <TrendingDown className="h-4 w-4 mr-1" />
+                              <TrendingDown className="h-3 w-3 md:h-4 md:w-4 mr-1" />
                               <span className="font-bold">{rankDiff}</span>
                             </div>
                           ) : rankDiff < 0 ? (
                             <div className="flex items-center text-green-600">
-                              <TrendingUp className="h-4 w-4 mr-1" />
+                              <TrendingUp className="h-3 w-3 md:h-4 md:w-4 mr-1" />
                               <span className="font-bold">{Math.abs(rankDiff)}</span>
                             </div>
                           ) : (
-                            <Minus className="h-4 w-4 text-gray-400" />
+                            <Minus className="h-3 w-3 md:h-4 md:w-4 text-gray-400" />
                           )}
                         </div>
                       </TableCell>
@@ -244,19 +244,19 @@ export default function StandingsPage() {
         </CardContent>
       </Card>
 
-      <div className="mt-6 p-4 bg-gray-100 border-4 border-black">
-        <h3 className="font-black uppercase mb-2">Legend</h3>
-        <div className="space-y-1 text-sm font-bold">
+      <div className="mt-4 md:mt-6 p-3 md:p-4 bg-gray-100 border-2 md:border-4 border-black">
+        <h3 className="font-black uppercase mb-2 text-sm md:text-base">Legend</h3>
+        <div className="space-y-1 text-xs md:text-sm font-bold">
           <div><span className="font-black">P</span> = Played, <span className="font-black">W</span> = Won, <span className="font-black">D</span> = Drawn, <span className="font-black">L</span> = Lost</div>
           <div><span className="font-black">GF</span> = Goals For, <span className="font-black">GA</span> = Goals Against, <span className="font-black">GD</span> = Goal Difference</div>
           <div><span className="font-black">Diff</span> = Difference between actual position and ELO-predicted position</div>
-          <div className="flex items-center gap-4 mt-2">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-4 mt-2">
             <div className="flex items-center text-green-600">
-              <TrendingUp className="h-4 w-4 mr-1" />
+              <TrendingUp className="h-3 w-3 md:h-4 md:w-4 mr-1" />
               <span>Team performing above ELO ranking</span>
             </div>
             <div className="flex items-center text-red-600">
-              <TrendingDown className="h-4 w-4 mr-1" />
+              <TrendingDown className="h-3 w-3 md:h-4 md:w-4 mr-1" />
               <span>Team performing below ELO ranking</span>
             </div>
           </div>

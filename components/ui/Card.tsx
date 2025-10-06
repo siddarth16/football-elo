@@ -17,7 +17,7 @@ export function Card({ children, className, variant = 'default' }: CardProps) {
   return (
     <div
       className={cn(
-        'border-4 p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]',
+        'border-2 md:border-4 p-3 md:p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] md:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]',
         variants[variant],
         className
       )}
@@ -34,7 +34,7 @@ interface CardHeaderProps {
 
 export function CardHeader({ children, className }: CardHeaderProps) {
   return (
-    <div className={cn('mb-4 pb-4 border-b-4 border-black', className)}>
+    <div className={cn('mb-3 md:mb-4 pb-3 md:pb-4 border-b-2 md:border-b-4 border-black', className)}>
       {children}
     </div>
   )
@@ -47,7 +47,7 @@ interface CardTitleProps {
 
 export function CardTitle({ children, className }: CardTitleProps) {
   return (
-    <h3 className={cn('text-2xl font-black uppercase tracking-tight', className)}>
+    <h3 className={cn('text-xl md:text-2xl font-black uppercase tracking-tight', className)}>
       {children}
     </h3>
   )

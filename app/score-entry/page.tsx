@@ -120,24 +120,24 @@ export default function ScoreEntryPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8 flex items-center justify-between">
+    <div className="container mx-auto px-2 md:px-4 py-4 md:py-8">
+      <div className="mb-4 md:mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-5xl font-black uppercase mb-2">Score Entry</h1>
-          <p className="text-gray-600 font-bold">
+          <h1 className="text-3xl md:text-5xl font-black uppercase mb-2">Score Entry</h1>
+          <p className="text-sm md:text-base text-gray-600 font-bold">
             Enter match scores to update ELO ratings and predictions
           </p>
         </div>
-        <Button onClick={handleLogout} variant="secondary">
+        <Button onClick={handleLogout} variant="secondary" className="text-xs md:text-sm">
           LOGOUT
         </Button>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3 md:space-y-4">
         {data.pending_matches.map((match) => (
           <Card key={match.eventId}>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-4">
+            <CardContent className="p-3 md:p-4">
+              <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <Badge className={getLeagueColor(match.leagueName)}>
@@ -147,30 +147,30 @@ export default function ScoreEntryPage() {
                       {formatDate(match.date)}
                     </span>
                   </div>
-                  <div className="font-bold">{match.homeTeamName} vs {match.awayTeamName}</div>
+                  <div className="font-bold text-sm md:text-base">{match.homeTeamName} vs {match.awayTeamName}</div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 md:gap-3">
                   <Input
                     type="number"
                     placeholder="0"
-                    className="w-20 h-12 text-center text-xl font-black"
+                    className="w-16 md:w-20 h-10 md:h-12 text-center text-lg md:text-xl font-black"
                     value={scores[match.eventId]?.home || ''}
                     onChange={(e) => handleScoreChange(match.eventId, 'home', e.target.value)}
                   />
-                  <span className="font-black text-xl">-</span>
+                  <span className="font-black text-lg md:text-xl">-</span>
                   <Input
                     type="number"
                     placeholder="0"
-                    className="w-20 h-12 text-center text-xl font-black"
+                    className="w-16 md:w-20 h-10 md:h-12 text-center text-lg md:text-xl font-black"
                     value={scores[match.eventId]?.away || ''}
                     onChange={(e) => handleScoreChange(match.eventId, 'away', e.target.value)}
                   />
                   <Button
                     onClick={() => handleSave(match)}
                     disabled={saving}
-                    className="h-12"
+                    className="h-10 md:h-12 px-3 md:px-4"
                   >
-                    <Save className="h-5 w-5" />
+                    <Save className="h-4 w-4 md:h-5 md:w-5" />
                   </Button>
                 </div>
               </div>

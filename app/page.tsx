@@ -76,74 +76,74 @@ export default function Dashboard() {
     .slice(0, 10)
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-5xl font-black uppercase mb-2">Dashboard</h1>
-        <p className="text-gray-600 font-bold">
+    <div className="container mx-auto px-2 md:px-4 py-4 md:py-8">
+      <div className="mb-4 md:mb-8">
+        <h1 className="text-3xl md:text-5xl font-black uppercase mb-2">Dashboard</h1>
+        <p className="text-sm md:text-base text-gray-600 font-bold">
           Real-time ELO ratings and predictions for top 5 European leagues
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8">
         <Card className="bg-blue-100">
-          <CardContent className="flex items-center justify-between">
+          <CardContent className="flex items-center justify-between p-3 md:p-4">
             <div>
-              <p className="text-sm font-bold uppercase text-gray-600 mb-1">
+              <p className="text-xs md:text-sm font-bold uppercase text-gray-600 mb-1">
                 Matches Played
               </p>
-              <p className="text-4xl font-black">{totalMatchesPlayed}</p>
+              <p className="text-2xl md:text-4xl font-black">{totalMatchesPlayed}</p>
             </div>
-            <Calendar className="h-12 w-12 text-blue-600" />
+            <Calendar className="h-8 w-8 md:h-12 md:w-12 text-blue-600" />
           </CardContent>
         </Card>
 
         <Card className="bg-green-100">
-          <CardContent className="flex items-center justify-between">
+          <CardContent className="flex items-center justify-between p-3 md:p-4">
             <div>
-              <p className="text-sm font-bold uppercase text-gray-600 mb-1">
+              <p className="text-xs md:text-sm font-bold uppercase text-gray-600 mb-1">
                 Upcoming Matches
               </p>
-              <p className="text-4xl font-black">{totalPredictions}</p>
+              <p className="text-2xl md:text-4xl font-black">{totalPredictions}</p>
             </div>
-            <Target className="h-12 w-12 text-green-600" />
+            <Target className="h-8 w-8 md:h-12 md:w-12 text-green-600" />
           </CardContent>
         </Card>
 
         <Card className="bg-purple-100">
-          <CardContent className="flex items-center justify-between">
+          <CardContent className="flex items-center justify-between p-3 md:p-4">
             <div>
-              <p className="text-sm font-bold uppercase text-gray-600 mb-1">
+              <p className="text-xs md:text-sm font-bold uppercase text-gray-600 mb-1">
                 Teams Tracked
               </p>
-              <p className="text-4xl font-black">
+              <p className="text-2xl md:text-4xl font-black">
                 {Object.keys(season2025.current_elos).length}
               </p>
             </div>
-            <Trophy className="h-12 w-12 text-purple-600" />
+            <Trophy className="h-8 w-8 md:h-12 md:w-12 text-purple-600" />
           </CardContent>
         </Card>
 
         <Card className="bg-yellow-100">
-          <CardContent className="flex items-center justify-between">
+          <CardContent className="flex items-center justify-between p-3 md:p-4">
             <div>
-              <p className="text-sm font-bold uppercase text-gray-600 mb-1">
+              <p className="text-xs md:text-sm font-bold uppercase text-gray-600 mb-1">
                 Avg Match ELO
               </p>
-              <p className="text-4xl font-black">
+              <p className="text-2xl md:text-4xl font-black">
                 {Math.round(Object.values(season2025.current_elos).reduce((a, b) => a + b, 0) / Object.values(season2025.current_elos).length)}
               </p>
             </div>
-            <TrendingUp className="h-12 w-12 text-yellow-600" />
+            <TrendingUp className="h-8 w-8 md:h-12 md:w-12 text-yellow-600" />
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8 mb-6 md:mb-8">
         <Card>
           <CardHeader>
-            <CardTitle>🏆 Top 10 Teams by ELO</CardTitle>
+            <CardTitle className="text-lg md:text-xl">🏆 Top 10 Teams by ELO</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-2 md:p-4">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -155,11 +155,11 @@ export default function Dashboard() {
               <TableBody>
                 {topTeams.map((team, idx) => (
                   <TableRow key={team.team}>
-                    <TableCell className="font-black text-lg">
+                    <TableCell className="font-black text-sm md:text-lg">
                       #{idx + 1}
                     </TableCell>
                     <TableCell className="font-bold">{team.team}</TableCell>
-                    <TableCell className="font-black text-lg">
+                    <TableCell className="font-black text-sm md:text-lg">
                       {formatElo(team.elo)}
                     </TableCell>
                   </TableRow>
@@ -171,14 +171,14 @@ export default function Dashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle>📅 Recent Matches</CardTitle>
+            <CardTitle className="text-lg md:text-xl">📅 Recent Matches</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
+          <CardContent className="p-2 md:p-4">
+            <div className="space-y-2 md:space-y-3">
               {recentMatches.map((match) => (
                 <div
                   key={match.eventId}
-                  className="border-4 border-black p-4 bg-white"
+                  className="border-2 md:border-4 border-black p-3 md:p-4 bg-white"
                 >
                   <div className="flex items-center justify-between mb-2">
                     <Badge className={getLeagueColor(match.leagueName)}>
@@ -190,11 +190,11 @@ export default function Dashboard() {
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <div className="font-bold text-sm">{match.homeTeamName}</div>
-                      <div className="font-bold text-sm mt-1">{match.awayTeamName}</div>
+                      <div className="font-bold text-xs md:text-sm">{match.homeTeamName}</div>
+                      <div className="font-bold text-xs md:text-sm mt-1">{match.awayTeamName}</div>
                     </div>
-                    <div className="text-center px-4">
-                      <div className="font-black text-2xl">
+                    <div className="text-center px-2 md:px-4">
+                      <div className="font-black text-xl md:text-2xl">
                         {match.homeTeamScore} - {match.awayTeamScore}
                       </div>
                     </div>

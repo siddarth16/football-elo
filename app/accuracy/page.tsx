@@ -105,65 +105,65 @@ export default function AccuracyPage() {
   })
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-5xl font-black uppercase mb-2">Prediction Accuracy</h1>
-        <p className="text-gray-600 font-bold">
+    <div className="container mx-auto px-2 md:px-4 py-4 md:py-8">
+      <div className="mb-4 md:mb-8">
+        <h1 className="text-3xl md:text-5xl font-black uppercase mb-2">Prediction Accuracy</h1>
+        <p className="text-sm md:text-base text-gray-600 font-bold">
           Track how well the ELO system predicts match outcomes
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6 mb-6 md:mb-8">
         <Card className="bg-blue-100">
-          <CardContent className="text-center p-6">
-            <div className="text-sm font-bold uppercase text-gray-600 mb-2">
+          <CardContent className="text-center p-4 md:p-6">
+            <div className="text-xs md:text-sm font-bold uppercase text-gray-600 mb-2">
               Overall Accuracy
             </div>
-            <div className="text-6xl font-black">{accuracyPercent.toFixed(1)}%</div>
-            <div className="text-sm font-bold text-gray-600 mt-2">
+            <div className="text-4xl md:text-6xl font-black">{accuracyPercent.toFixed(1)}%</div>
+            <div className="text-xs md:text-sm font-bold text-gray-600 mt-2">
               {correctPredictions} / {totalPredictions} matches
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-green-100">
-          <CardContent className="text-center p-6">
-            <div className="text-sm font-bold uppercase text-gray-600 mb-2">
+          <CardContent className="text-center p-4 md:p-6">
+            <div className="text-xs md:text-sm font-bold uppercase text-gray-600 mb-2">
               Correct Predictions
             </div>
-            <div className="text-6xl font-black">{correctPredictions}</div>
+            <div className="text-4xl md:text-6xl font-black">{correctPredictions}</div>
             <div className="flex items-center justify-center mt-2">
-              <CheckCircle2 className="h-6 w-6 text-green-600" />
+              <CheckCircle2 className="h-5 w-5 md:h-6 md:w-6 text-green-600" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-red-100">
-          <CardContent className="text-center p-6">
-            <div className="text-sm font-bold uppercase text-gray-600 mb-2">
+          <CardContent className="text-center p-4 md:p-6">
+            <div className="text-xs md:text-sm font-bold uppercase text-gray-600 mb-2">
               Incorrect Predictions
             </div>
-            <div className="text-6xl font-black">{totalPredictions - correctPredictions}</div>
+            <div className="text-4xl md:text-6xl font-black">{totalPredictions - correctPredictions}</div>
             <div className="flex items-center justify-center mt-2">
-              <XCircle className="h-6 w-6 text-red-600" />
+              <XCircle className="h-5 w-5 md:h-6 md:w-6 text-red-600" />
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="mb-8">
+      <Card className="mb-6 md:mb-8">
         <CardHeader>
-          <CardTitle>Accuracy by League</CardTitle>
+          <CardTitle className="text-lg md:text-xl">Accuracy by League</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0 md:p-4">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>League</TableHead>
-                <TableHead>Matches</TableHead>
-                <TableHead>Correct</TableHead>
-                <TableHead>Incorrect</TableHead>
-                <TableHead>Accuracy</TableHead>
+                <TableHead className="text-center">Matches</TableHead>
+                <TableHead className="text-center hidden md:table-cell">Correct</TableHead>
+                <TableHead className="text-center hidden md:table-cell">Incorrect</TableHead>
+                <TableHead className="text-center">Accuracy</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -171,13 +171,13 @@ export default function AccuracyPage() {
                 <TableRow key={league}>
                   <TableCell>
                     <Badge className={getLeagueColor(league)}>
-                      {league}
+                      {league.split(' ').slice(-2).join(' ')}
                     </Badge>
                   </TableCell>
-                  <TableCell className="font-bold">{stats.total}</TableCell>
-                  <TableCell className="font-bold text-green-600">{stats.correct}</TableCell>
-                  <TableCell className="font-bold text-red-600">{stats.total - stats.correct}</TableCell>
-                  <TableCell className="font-black text-lg">
+                  <TableCell className="font-bold text-center">{stats.total}</TableCell>
+                  <TableCell className="font-bold text-green-600 text-center hidden md:table-cell">{stats.correct}</TableCell>
+                  <TableCell className="font-bold text-red-600 text-center hidden md:table-cell">{stats.total - stats.correct}</TableCell>
+                  <TableCell className="font-black text-sm md:text-lg text-center">
                     {((stats.correct / stats.total) * 100).toFixed(1)}%
                   </TableCell>
                 </TableRow>
@@ -188,57 +188,57 @@ export default function AccuracyPage() {
       </Card>
 
       <div className="mb-4">
-        <label className="block font-bold mb-2 uppercase">Filter by League</label>
+        <label className="block font-bold mb-2 uppercase text-sm md:text-base">Filter by League</label>
         <select
           value={selectedLeague}
           onChange={(e) => setSelectedLeague(e.target.value)}
-          className="px-4 py-3 border-4 border-black font-bold uppercase"
+          className="px-3 md:px-4 py-3 border-2 md:border-4 border-black font-bold uppercase text-xs md:text-sm w-full md:w-auto"
         >
           {leagues.map(league => (
-            <option key={league} value={league}>{league}</option>
+            <option key={league} value={league}>{league === 'All Leagues' ? league : league.split(' ').slice(-2).join(' ')}</option>
           ))}
         </select>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>All Predictions vs Actual Results ({filteredMatches.length} matches)</CardTitle>
+          <CardTitle className="text-lg md:text-xl">All Predictions vs Actual Results ({filteredMatches.length} matches)</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="max-h-[600px] overflow-y-auto">
+        <CardContent className="p-0 md:p-4">
+          <div className="max-h-[400px] md:max-h-[600px] overflow-y-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead>
+                  <TableHead className="whitespace-nowrap">Date</TableHead>
                   <TableHead>Match</TableHead>
-                  <TableHead>Result</TableHead>
+                  <TableHead className="hidden md:table-cell">Result</TableHead>
                   <TableHead>Predicted</TableHead>
-                  <TableHead>Actual</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead className="hidden sm:table-cell">Actual</TableHead>
+                  <TableHead className="text-center">✓</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredMatches.reverse().map((match) => (
                   <TableRow key={match.eventId}>
-                    <TableCell className="font-bold text-xs whitespace-nowrap">
+                    <TableCell className="font-bold whitespace-nowrap">
                       {formatDate(match.date)}
                     </TableCell>
-                    <TableCell className="font-bold">
-                      <div>{match.homeTeamName} vs {match.awayTeamName}</div>
-                      <Badge className={getLeagueColor(match.leagueName) + ' text-xs'}>
+                    <TableCell className="font-bold min-w-[140px]">
+                      <div className="text-xs leading-tight">{match.homeTeamName} vs {match.awayTeamName}</div>
+                      <Badge className={getLeagueColor(match.leagueName) + ' text-xs mt-1'}>
                         {match.leagueName.split(' ').slice(-2).join(' ')}
                       </Badge>
                     </TableCell>
-                    <TableCell className="font-black">
+                    <TableCell className="font-black hidden md:table-cell whitespace-nowrap">
                       {match.homeTeamScore} - {match.awayTeamScore}
                     </TableCell>
-                    <TableCell className="font-bold">{match.prediction}</TableCell>
-                    <TableCell className="font-bold">{match.actualResult}</TableCell>
-                    <TableCell>
+                    <TableCell className="font-bold text-xs whitespace-nowrap">{match.prediction}</TableCell>
+                    <TableCell className="font-bold text-xs hidden sm:table-cell">{match.actualResult}</TableCell>
+                    <TableCell className="text-center">
                       {match.correct ? (
-                        <CheckCircle2 className="h-6 w-6 text-green-600" />
+                        <CheckCircle2 className="h-5 w-5 md:h-6 md:w-6 text-green-600 mx-auto" />
                       ) : (
-                        <XCircle className="h-6 w-6 text-red-600" />
+                        <XCircle className="h-5 w-5 md:h-6 md:w-6 text-red-600 mx-auto" />
                       )}
                     </TableCell>
                   </TableRow>
