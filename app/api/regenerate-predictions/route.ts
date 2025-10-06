@@ -122,7 +122,7 @@ export async function POST() {
 
     // 3. Get all pending matches (is_completed = false)
     // Fetch in batches to handle large datasets
-    let allPendingMatches: unknown[] = []
+    let allPendingMatches: any[] = []
     let from = 0
     const batchSize = 1000
 
