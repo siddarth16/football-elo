@@ -9,7 +9,8 @@ import {
   Edit3,
   Trophy,
   BarChart3,
-  Target
+  Target,
+  List
 } from 'lucide-react'
 
 const navItems = [
@@ -17,6 +18,7 @@ const navItems = [
   { href: '/predictions', label: 'Predictions', icon: Target },
   { href: '/score-entry', label: 'Score Entry', icon: Edit3 },
   { href: '/rankings', label: 'Rankings', icon: Trophy },
+  { href: '/standings', label: 'Standings', icon: List },
   { href: '/history', label: 'History', icon: TrendingUp },
   { href: '/accuracy', label: 'Accuracy', icon: BarChart3 },
 ]

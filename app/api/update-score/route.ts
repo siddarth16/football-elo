@@ -164,6 +164,21 @@ export async function POST(request: NextRequest) {
       .delete()
       .eq('event_id', matchId)
 
+    // Regenerate all predictions for remaining pending matches
+    // Call the regenerate-predictions endpoint
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
+                      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+
+      await fetch(`${baseUrl}/api/regenerate-predictions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      })
+    } catch (predError) {
+      console.error('Error regenerating predictions:', predError)
+      // Don't fail the whole request if prediction regeneration fails
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Score saved and ELO recalculated successfully!',
