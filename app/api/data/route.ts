@@ -1,21 +1,58 @@
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
 
-// Convert snake_case to camelCase
+// Convert database fields to match frontend expected names
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function toCamelCase(obj: any): any {
-  if (Array.isArray(obj)) {
-    return obj.map(toCamelCase)
-  } else if (obj !== null && typeof obj === 'object') {
-    return Object.keys(obj).reduce((acc, key) => {
-      const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      acc[camelKey] = toCamelCase(obj[key])
-      return acc
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    }, {} as any)
+function transformMatch(match: any): any {
+  return {
+    Rn: match.id,
+    eventId: match.event_id,
+    seasonType: match.season_type,
+    seasonName: match.season_name,
+    seasonYear: match.season_year,
+    leagueId: match.league_id,
+    leagueName: match.league_name,
+    date: match.match_date,
+    venueId: match.venue_id,
+    attendance: match.attendance,
+    homeTeamId: match.home_team_id,
+    homeTeamName: match.home_team_name,
+    awayTeamId: match.away_team_id,
+    awayTeamName: match.away_team_name,
+    homeTeamScore: match.home_team_score,
+    awayTeamScore: match.away_team_score,
+    homeTeamWinner: match.home_team_winner,
+    awayTeamWinner: match.away_team_winner,
+    home_elo_pre: match.home_elo_pre,
+    away_elo_pre: match.away_elo_pre,
+    home_elo_change: match.home_elo_change,
+    away_elo_change: match.away_elo_change,
+    home_elo_post: match.home_elo_post,
+    away_elo_post: match.away_elo_post,
+    home_elo_current: match.home_elo_pre,
+    away_elo_current: match.away_elo_pre
   }
-  return obj
+}
+
+// Transform prediction data
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function transformPrediction(pred: any, matchesMap: Map<number, any>): any {
+  const match = matchesMap.get(pred.event_id)
+  if (!match) return null
+
+  return {
+    ...transformMatch(match),
+    home_elo: pred.home_elo,
+    away_elo: pred.away_elo,
+    home_win_prob: pred.home_win_prob,
+    draw_prob: pred.draw_prob,
+    away_win_prob: pred.away_win_prob,
+    home_or_draw_prob: pred.home_or_draw_prob,
+    away_or_draw_prob: pred.away_or_draw_prob,
+    recommended_bet: pred.recommended_bet,
+    recommended_prob: pred.recommended_prob,
+    confidence: pred.confidence
+  }
 }
 
 export async function GET() {
@@ -84,25 +121,35 @@ export async function GET() {
       paramsObject['promoted_teams'] = promotedTeams
     }
 
-    // Convert all data from snake_case to camelCase
-    const matches2024Camel = toCamelCase(matches_2024 || [])
-    const matches2025CompletedCamel = toCamelCase(matches_2025_completed || [])
-    const matches2025PendingCamel = toCamelCase(matches_2025_pending || [])
-    const predictionsCamel = toCamelCase(predictions || [])
+    // Transform all matches to match frontend format
+    const matches2024Transformed = (matches_2024 || []).map(transformMatch)
+    const matches2025CompletedTransformed = (matches_2025_completed || []).map(transformMatch)
+    const matches2025PendingTransformed = (matches_2025_pending || []).map(transformMatch)
+
+    // Create a map of pending matches for predictions
+    const pendingMatchesMap = new Map()
+    matches_2025_pending?.forEach(match => {
+      pendingMatchesMap.set(match.event_id, match)
+    })
+
+    // Transform predictions with full match data
+    const predictionsTransformed = (predictions || [])
+      .map(pred => transformPrediction(pred, pendingMatchesMap))
+      .filter(p => p !== null)
 
     // Format data to match existing structure
     const season2024 = {
-      matches: matches2024Camel,
+      matches: matches2024Transformed,
       final_elos: current_elos,
       baseline_stats: paramsObject['baseline_stats'] || {},
       promoted_teams: promotedTeams
     }
 
     const season2025 = {
-      completed_matches: matches2025CompletedCamel,
-      pending_matches: matches2025PendingCamel,
+      completed_matches: matches2025CompletedTransformed,
+      pending_matches: matches2025PendingTransformed,
       current_elos,
-      predictions: predictionsCamel,
+      predictions: predictionsTransformed,
       promoted_teams: promotedTeams
     }
 
