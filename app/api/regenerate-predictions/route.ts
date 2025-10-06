@@ -1,6 +1,14 @@
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
 
+interface PendingMatch {
+  id: number
+  event_id: number
+  home_team_name: string
+  away_team_name: string
+  [key: string]: unknown
+}
+
 /**
  * Calculate draw probability based on ELO difference
  */
@@ -122,7 +130,7 @@ export async function POST() {
 
     // 3. Get all pending matches (is_completed = false)
     // Fetch in batches to handle large datasets
-    let allPendingMatches: any[] = []
+    let allPendingMatches: PendingMatch[] = []
     let from = 0
     const batchSize = 1000
 
@@ -139,7 +147,7 @@ export async function POST() {
 
       if (!batch || batch.length === 0) break
 
-      allPendingMatches = allPendingMatches.concat(batch)
+      allPendingMatches = allPendingMatches.concat(batch as PendingMatch[])
 
       if (batch.length < batchSize) break
 
