@@ -4,19 +4,48 @@ import { useEffect, useState } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/Table'
-import { formatDate, formatPercentage, getLeagueColor } from '@/lib/utils'
-import { Season2025Data, ProcessedMatch } from '@/types'
+import { formatDate, getLeagueColor } from '@/lib/utils'
+import { Season2025Data } from '@/types'
 import { CheckCircle2, XCircle } from 'lucide-react'
+
+// Recreate prediction logic to check accuracy
+function getPrediction(homeElo: number, awayElo: number, homeAdvantage: number) {
+  const expected = 1 / (1 + Math.pow(10, (awayElo - homeElo - homeAdvantage) / 400))
+
+  // Base draw probability
+  const baseDraw = 0.2494
+  const eloDiff = Math.abs(homeElo - awayElo)
+  const closenessBonus = Math.max(0, (200 - Math.min(eloDiff, 200)) / 2000)
+  const drawProb = baseDraw * (1 + closenessBonus)
+  const cappedDrawProb = Math.max(0.15, Math.min(0.40, drawProb))
+
+  const remaining = 1 - cappedDrawProb
+  const homeWinProb = expected * remaining
+  const awayWinProb = (1 - expected) * remaining
+
+  // Determine recommendation
+  if (homeWinProb >= 0.40) return 'Home Win'
+  if (awayWinProb >= 0.40) return 'Away Win'
+  if (cappedDrawProb >= 0.40) return 'Draw'
+  if (homeWinProb + cappedDrawProb > 0.60) return 'Home Win/Draw'
+  if (awayWinProb + cappedDrawProb > 0.60) return 'Away Win/Draw'
+
+  // Return highest probability
+  if (homeWinProb > awayWinProb && homeWinProb > cappedDrawProb) return 'Home Win'
+  if (awayWinProb > homeWinProb && awayWinProb > cappedDrawProb) return 'Away Win'
+  return 'Draw'
+}
 
 export default function AccuracyPage() {
   const [loading, setLoading] = useState(true)
-  const [data, setData] = useState<Season2025Data | null>(null)
+  const [data, setData] = useState<{season2025: Season2025Data, parameters: {baseline_stats: {avg_home_advantage: number}}} | null>(null)
+  const [selectedLeague, setSelectedLeague] = useState('All Leagues')
 
   useEffect(() => {
     fetch('/api/data')
       .then(res => res.json())
       .then(d => {
-        setData(d.season2025)
+        setData({ season2025: d.season2025, parameters: d.parameters })
         setLoading(false)
       })
       .catch(() => setLoading(false))
@@ -26,34 +55,54 @@ export default function AccuracyPage() {
     return <div className="container mx-auto px-4 py-12"><div className="text-2xl font-black uppercase">Loading...</div></div>
   }
 
-  // Calculate accuracy by comparing predictions to actual results
-  // Note: In a real implementation, you'd match completed matches with their pre-match predictions
-  const completedMatches = data.completed_matches
+  const homeAdvantage = data.parameters.baseline_stats.avg_home_advantage
+  const completedMatches = data.season2025.completed_matches
 
+  // Calculate accuracy
+  const matchesWithPredictions = completedMatches
+    .filter(m => m.home_elo_pre && m.away_elo_pre)
+    .map(match => {
+      const prediction = getPrediction(match.home_elo_pre, match.away_elo_pre, homeAdvantage)
+
+      let actualResult = 'Draw'
+      if (match.homeTeamWinner) actualResult = 'Home Win'
+      else if (match.awayTeamWinner) actualResult = 'Away Win'
+
+      let correct = false
+      if (prediction === 'Home Win' && actualResult === 'Home Win') correct = true
+      else if (prediction === 'Away Win' && actualResult === 'Away Win') correct = true
+      else if (prediction === 'Draw' && actualResult === 'Draw') correct = true
+      else if (prediction === 'Home Win/Draw' && (actualResult === 'Home Win' || actualResult === 'Draw')) correct = true
+      else if (prediction === 'Away Win/Draw' && (actualResult === 'Away Win' || actualResult === 'Draw')) correct = true
+
+      return {
+        ...match,
+        prediction,
+        actualResult,
+        correct
+      }
+    })
+
+  const filteredMatches = selectedLeague === 'All Leagues'
+    ? matchesWithPredictions
+    : matchesWithPredictions.filter(m => m.leagueName === selectedLeague)
+
+  const leagues = ['All Leagues', ...Array.from(new Set(completedMatches.map(m => m.leagueName)))]
+
+  const correctPredictions = filteredMatches.filter(m => m.correct).length
+  const totalPredictions = filteredMatches.length
+  const accuracyPercent = totalPredictions > 0 ? (correctPredictions / totalPredictions) * 100 : 0
+
+  // Accuracy by league
   const accuracyByLeague: Record<string, { correct: number, total: number }> = {}
-
-  completedMatches.forEach(match => {
+  matchesWithPredictions.forEach(match => {
     const league = match.leagueName
     if (!accuracyByLeague[league]) {
       accuracyByLeague[league] = { correct: 0, total: 0 }
     }
-
-    // Simple logic: if home team had higher pre-match ELO and won, count as correct
-    const homeExpectedToWin = match.home_elo_pre > match.away_elo_pre
-    const homeActuallyWon = match.home_result === 'W'
-
     accuracyByLeague[league].total++
-    if (homeExpectedToWin === homeActuallyWon || match.home_result === 'D') {
-      // If prediction matched or draw (more nuanced in real system)
-      accuracyByLeague[league].correct++
-    }
+    if (match.correct) accuracyByLeague[league].correct++
   })
-
-  const overallAccuracy = Object.values(accuracyByLeague).reduce((acc, { correct, total }) => {
-    return { correct: acc.correct + correct, total: acc.total + total }
-  }, { correct: 0, total: 0 })
-
-  const overallPercent = (overallAccuracy.correct / overallAccuracy.total) * 100
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -70,9 +119,9 @@ export default function AccuracyPage() {
             <div className="text-sm font-bold uppercase text-gray-600 mb-2">
               Overall Accuracy
             </div>
-            <div className="text-6xl font-black">{overallPercent.toFixed(1)}%</div>
+            <div className="text-6xl font-black">{accuracyPercent.toFixed(1)}%</div>
             <div className="text-sm font-bold text-gray-600 mt-2">
-              {overallAccuracy.correct} / {overallAccuracy.total} matches
+              {correctPredictions} / {totalPredictions} matches
             </div>
           </CardContent>
         </Card>
@@ -82,7 +131,7 @@ export default function AccuracyPage() {
             <div className="text-sm font-bold uppercase text-gray-600 mb-2">
               Correct Predictions
             </div>
-            <div className="text-6xl font-black">{overallAccuracy.correct}</div>
+            <div className="text-6xl font-black">{correctPredictions}</div>
             <div className="flex items-center justify-center mt-2">
               <CheckCircle2 className="h-6 w-6 text-green-600" />
             </div>
@@ -94,7 +143,7 @@ export default function AccuracyPage() {
             <div className="text-sm font-bold uppercase text-gray-600 mb-2">
               Incorrect Predictions
             </div>
-            <div className="text-6xl font-black">{overallAccuracy.total - overallAccuracy.correct}</div>
+            <div className="text-6xl font-black">{totalPredictions - correctPredictions}</div>
             <div className="flex items-center justify-center mt-2">
               <XCircle className="h-6 w-6 text-red-600" />
             </div>
@@ -102,7 +151,7 @@ export default function AccuracyPage() {
         </Card>
       </div>
 
-      <Card>
+      <Card className="mb-8">
         <CardHeader>
           <CardTitle>Accuracy by League</CardTitle>
         </CardHeader>
@@ -138,58 +187,65 @@ export default function AccuracyPage() {
         </CardContent>
       </Card>
 
-      <Card className="mt-8">
+      <div className="mb-4">
+        <label className="block font-bold mb-2 uppercase">Filter by League</label>
+        <select
+          value={selectedLeague}
+          onChange={(e) => setSelectedLeague(e.target.value)}
+          className="px-4 py-3 border-4 border-black font-bold uppercase"
+        >
+          {leagues.map(league => (
+            <option key={league} value={league}>{league}</option>
+          ))}
+        </select>
+      </div>
+
+      <Card>
         <CardHeader>
-          <CardTitle>Recent Predictions vs Actual Results</CardTitle>
+          <CardTitle>All Predictions vs Actual Results ({filteredMatches.length} matches)</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Match</TableHead>
-                <TableHead>Result</TableHead>
-                <TableHead>Expected Winner</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {completedMatches.slice(-20).reverse().map((match) => {
-                const expectedWinner = match.home_elo_pre > match.away_elo_pre
-                  ? match.homeTeamName
-                  : match.awayTeamName
-                const actualWinner =
-                  match.home_result === 'W'
-                    ? match.homeTeamName
-                    : match.away_result === 'W'
-                    ? match.awayTeamName
-                    : 'Draw'
-                const correct = expectedWinner === actualWinner || actualWinner === 'Draw'
-
-                return (
+          <div className="max-h-[600px] overflow-y-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Match</TableHead>
+                  <TableHead>Result</TableHead>
+                  <TableHead>Predicted</TableHead>
+                  <TableHead>Actual</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredMatches.reverse().map((match) => (
                   <TableRow key={match.eventId}>
-                    <TableCell className="font-bold text-xs">
+                    <TableCell className="font-bold text-xs whitespace-nowrap">
                       {formatDate(match.date)}
                     </TableCell>
                     <TableCell className="font-bold">
                       <div>{match.homeTeamName} vs {match.awayTeamName}</div>
+                      <Badge className={getLeagueColor(match.leagueName) + ' text-xs'}>
+                        {match.leagueName.split(' ').slice(-2).join(' ')}
+                      </Badge>
                     </TableCell>
                     <TableCell className="font-black">
                       {match.homeTeamScore} - {match.awayTeamScore}
                     </TableCell>
-                    <TableCell className="font-bold">{expectedWinner}</TableCell>
+                    <TableCell className="font-bold">{match.prediction}</TableCell>
+                    <TableCell className="font-bold">{match.actualResult}</TableCell>
                     <TableCell>
-                      {correct ? (
+                      {match.correct ? (
                         <CheckCircle2 className="h-6 w-6 text-green-600" />
                       ) : (
                         <XCircle className="h-6 w-6 text-red-600" />
                       )}
                     </TableCell>
                   </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>
