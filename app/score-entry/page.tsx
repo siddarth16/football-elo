@@ -134,7 +134,7 @@ export default function ScoreEntryPage() {
       </div>
 
       <div className="space-y-4">
-        {data.pending_matches.slice(0, 50).map((match) => (
+        {data.pending_matches.map((match) => (
           <Card key={match.eventId}>
             <CardContent className="p-4">
               <div className="flex items-center gap-4">

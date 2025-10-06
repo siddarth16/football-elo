@@ -70,7 +70,14 @@ export default function HistoryPage() {
             <LineChart data={teamMatches}>
               <CartesianGrid strokeWidth={4} stroke="#000" />
               <XAxis dataKey="match" stroke="#000" strokeWidth={2} />
-              <YAxis stroke="#000" strokeWidth={2} />
+              <YAxis
+                stroke="#000"
+                strokeWidth={2}
+                domain={[
+                  (dataMin: number) => Math.floor(dataMin - 50),
+                  (dataMax: number) => Math.ceil(dataMax + 50)
+                ]}
+              />
               <Tooltip
                 contentStyle={{ border: '4px solid #000', borderRadius: 0 }}
                 labelStyle={{ fontWeight: 'bold' }}

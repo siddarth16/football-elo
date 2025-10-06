@@ -109,18 +109,6 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-yellow-100">
-          <CardContent className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-bold uppercase text-gray-600 mb-1">
-                Promoted Teams
-              </p>
-              <p className="text-4xl font-black">{season2025.promoted_teams.length}</p>
-            </div>
-            <TrendingUp className="h-12 w-12 text-yellow-600" />
-          </CardContent>
-        </Card>
-
         <Card className="bg-purple-100">
           <CardContent className="flex items-center justify-between">
             <div>
@@ -132,6 +120,20 @@ export default function Dashboard() {
               </p>
             </div>
             <Trophy className="h-12 w-12 text-purple-600" />
+          </CardContent>
+        </Card>
+
+        <Card className="bg-yellow-100">
+          <CardContent className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-bold uppercase text-gray-600 mb-1">
+                Avg Match ELO
+              </p>
+              <p className="text-4xl font-black">
+                {Math.round(Object.values(season2025.current_elos).reduce((a, b) => a + b, 0) / Object.values(season2025.current_elos).length)}
+              </p>
+            </div>
+            <TrendingUp className="h-12 w-12 text-yellow-600" />
           </CardContent>
         </Card>
       </div>

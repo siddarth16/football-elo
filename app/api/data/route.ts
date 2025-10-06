@@ -121,6 +121,34 @@ export async function GET() {
       paramsObject['promoted_teams'] = promotedTeams
     }
 
+    // Calculate final ELOs from 2024-25 season (last match of each team)
+    const final_elos_2024: Record<string, number> = {}
+    const teamLastMatches: Record<string, typeof matches_2024[0]> = {}
+
+    matches_2024?.forEach(match => {
+      if (match.home_elo_post) {
+        teamLastMatches[match.home_team_name] = match
+      }
+      if (match.away_elo_post) {
+        teamLastMatches[match.away_team_name] = match
+      }
+    })
+
+    Object.entries(teamLastMatches).forEach(([teamName, match]) => {
+      if (match.home_team_name === teamName) {
+        final_elos_2024[teamName] = match.home_elo_post
+      } else {
+        final_elos_2024[teamName] = match.away_elo_post
+      }
+    })
+
+    // For promoted teams not in 2024-25, use their starting ELO (1400)
+    promotedTeams.forEach(team => {
+      if (!final_elos_2024[team]) {
+        final_elos_2024[team] = 1400
+      }
+    })
+
     // Transform all matches to match frontend format
     const matches2024Transformed = (matches_2024 || []).map(transformMatch)
     const matches2025CompletedTransformed = (matches_2025_completed || []).map(transformMatch)
@@ -140,7 +168,7 @@ export async function GET() {
     // Format data to match existing structure
     const season2024 = {
       matches: matches2024Transformed,
-      final_elos: current_elos,
+      final_elos: final_elos_2024,
       baseline_stats: paramsObject['baseline_stats'] || {},
       promoted_teams: promotedTeams
     }
